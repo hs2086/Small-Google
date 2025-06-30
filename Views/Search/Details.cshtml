@@ -1,0 +1,257 @@
+﻿@model BigDataProject.ViewModel.FrontDataVM
+
+@{
+    ViewData["Title"] = "Search";
+
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Search</title>
+    <style>
+        #main-div {
+        width: 50%;
+        height: 50px;
+        display: flex;
+        border-radius: 20px 20px;
+        position: relative;
+        top: 15%;
+        left: 25%;
+        align-items: center;
+        padding: 0 10px;
+        box-shadow: 0 2px 8px rgba(229, 229, 229, 0.5);
+        background-color: white;
+        }
+
+        .search-icon {
+        height: 24px;
+        width: 24px;
+        margin-right: 10px;
+        }
+
+        #srch {
+        flex: 1;
+        height: 50px;
+        border: none;
+        background-color: white;
+        border-radius: 20px 20px;
+        padding-left: 10px;
+        font-size: 16px;
+        outline: none;
+        }
+
+        #sub {
+        height: 50px;
+        border: none;
+        background-color: dodgerblue;
+        color: black;
+        border-radius: 0 20px 20px 0;
+        padding: 0 15px;
+        cursor: pointer;
+        font-size: 18px;
+        position: relative;
+        width: 80px;
+        left: 2%;
+        }
+
+        #text {
+        display: none;
+        position: fixed;
+        top: calc(15% + 50px);
+        left: 25%;
+        width: 50%;
+        background-color: white;
+        border-radius: 10px 10px;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .dropdown-list ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        }
+
+        .dropdown-list li {
+        padding: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        color: black;
+        text-align: center;
+        cursor: pointer;
+        }
+
+        .dropdown-list li:hover {
+        background-color: #90e0ef;
+        border-radius: 10px 10px;
+        }
+
+        img {
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+        }
+
+        .bigdata {
+        font-size: 50px;
+        color: #0077b6;
+        text-align: center;
+        margin-top: 20px;
+        }
+
+        .result-search-normal {
+        margin-top: 60px;
+        backdrop-filter: blur(1px);
+        padding: 15px 30px;
+        -webkit-backdrop-filter: blur(10px);
+        background-color: #1e90ff33;
+        border-right: 2px solid #ccc;
+        }
+
+        .result-search-rank {
+        margin-top: 60px;
+        backdrop-filter: blur(1px);
+        padding: 15px 30px;
+        -webkit-backdrop-filter: blur(10px);
+        background-color: #1e90ff33;
+        }
+
+        a {
+        text-decoration: none;
+        font-size: 20px;
+        font-weight: bold;
+        color: #270898;
+        }
+
+        a:hover {
+        text-decoration: underline;
+        color: white;
+        }
+
+        span {
+        box-sizing: border-box;
+        font-size: 20px;
+        font-weight: bold;
+        }
+
+        .container {
+        border-radius: 10px 10px;
+        }
+        h4 {
+        color: black;
+
+        }
+        h3 {
+        color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="bigdata">Big Data</h1>
+
+    <form method="get" id="main-div" asp-action="Details" asp-controller="Search">
+        <img src="/Images/sear.svg" alt="Search Icon" />
+        <input id="srch" type="search" name="searchTerm" value="@Model.Word" placeholder="What are you looking for?" oninput="loaddata()" autocomplete="off" />
+        <input id="sub" type="submit" name="sub" value="Go" />
+    </form>
+
+    <div id="text" class="dropdown-list"></div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6 result-search-normal">
+                <h3 style="text-align: center; margin-bottom: 20px;">Inverted Index Results</h3>
+                @if (Model.LinksNormal.Count == 0)
+                {
+                    <div>
+                        <h4>Sorry, no results found.</h4>
+                    </div>
+                }
+                else
+                {
+                    <h4 style="text-align:center;">@Model.Word</h4>
+                    @for (int i = 0; i < Model.LinksNormal.Count; i++)
+                    {
+                        <div style="text-align:center;">
+                            <a href="@Model.LinksNormal[i]#:~:text=@Model.Word" target="_blank">
+                                @((Model.LinksNormal[i]?.Length < 40) ? $"{Model.LinksNormal[i]}" : $"{Model.LinksNormal[i]?.Substring(0, 40)}")
+                            </a>
+                        </div>
+                        <span>: @Model.FreqsNarmal[i]</span>
+                        <hr />
+                    }
+                }
+            </div>
+
+            <div class="col-md-6 result-search-rank">
+                <h3 style="text-align: center; margin-bottom: 20px;">PageRank Results</h3>
+                @if (Model.LinksRank.Count == 0)
+                {
+                    <div>
+                        <h4>Sorry, no results found.</h4>
+                    </div>
+                }
+                else
+                {
+                    <h4 style="text-align:center;">@Model.Word</h4>
+                    @for (int i = 0; i < Model.LinksRank.Count; i++)
+                    {
+                        <div style="text-align:center;">
+                            @if(Model.FreqsRank[i] == "0")
+                            {
+                                <span>--> </span>
+                            }
+                            <a href="@Model.LinksRank[i]#:~:text=@Model.Word" target="_blank">
+                                @((Model.LinksRank[i]?.Length < 40) ? $"{Model.LinksRank[i]}" : $"{Model.LinksRank[i]?.Substring(0, 40)}")
+                            </a>
+                            
+                        </div>
+                        <hr />
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        function loaddata() {
+            const input = document.getElementById("srch").value.trim();
+            const textDiv = document.getElementById("text");
+
+            if (input === "") {
+                textDiv.style.display = "none";
+                return;
+            }
+
+            $.ajax({
+                url: '/Search/GetData/' + encodeURIComponent(input),
+                method: 'GET',
+                success: function (data) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        let listHtml = '<ul>';
+                        data.forEach(function (item) {
+                            listHtml += `<li onclick="selectSuggestion('${item.replace(/'/g, "\\'")}')">${item}</li>`;
+                        });
+                        listHtml += '</ul>';
+                        textDiv.innerHTML = listHtml;
+                        textDiv.style.display = "block";
+                    } else {
+                        textDiv.style.display = "none";
+                    }
+                }
+            });
+        }
+
+        function selectSuggestion(value) {
+            document.getElementById("srch").value = value;
+            document.getElementById("text").style.display = "none";
+            document.getElementById("sub").click();
+        }
+    </script>
+</body>
+</html>

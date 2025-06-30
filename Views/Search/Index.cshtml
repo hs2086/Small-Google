@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Search</title>
+    <style>
+        .main-div {
+            width: 50%;
+            height: 50px;
+            display: flex;
+            border-radius: 20px 20px;
+            position: fixed;
+            top: 35%;
+            left: 25%;
+            align-items: center;
+            padding: 0 10px;
+            box-shadow: 0 2px 8px rgba(229, 229, 229, 0.5);
+            background-color: white;
+        }
+
+        .search-icon {
+            height: 24px;
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        #srch {
+            flex: 1;
+            height: 50px;
+            border: none;
+            background-color: white;
+            border-radius: 20px 20px;
+            padding-left: 10px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        #sub {
+            height: 50px;
+            border: none;
+            background-color: dodgerblue;
+            color: black;
+            border-radius: 0 20px 20px 0;
+            padding: 0 15px;
+            cursor: pointer;
+            font-size: 18px;
+            position: fixed;
+            width: 80px;
+            left: 70%;
+        }
+
+        #text {
+            display: none;
+            position: fixed;
+            top: 40%;
+            left: 25%;
+            width: 50%;
+            background-color: white;
+            border-radius: 0 0 10px 10px;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .dropdown-list ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dropdown-list li {
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: black;
+            text-align: center;
+            cursor: pointer;
+        }
+
+            .dropdown-list li:hover {
+                background-color: #90e0ef; /* lighter cyan */
+            }
+
+        img {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+        .bigdata {
+            font-size: 50px;
+            color: #0077b6; /* dark blue */
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+
+</head>
+<body>
+    <h1 class="bigdata">Big Data</h1>
+
+
+    <form method="get" class="main-div" asp-action="Details" asp-controller="Search">
+        <img src="/Images/sear.svg" alt="Search Icon" />
+        <input id="srch" type="search" name="searchTerm" placeholder="What are you looking for?" oninput="loaddata()" autocomplete="off" />
+        <input id="sub" type="submit" name="sub" value="Go" />
+    </form>
+
+    <div id="text" class="dropdown-list"></div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        function loaddata() {
+            const input = document.getElementById("srch").value.trim();
+            const textDiv = document.getElementById("text");
+
+            if (input === "") {
+                textDiv.style.display = "none";
+                return;
+            }
+
+            $.ajax({
+                url: '/Search/GetData/' + encodeURIComponent(input),
+                method: 'GET',
+                success: function (data) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        let listHtml = '<ul>';
+                        data.forEach(function (item) {
+                            listHtml += `<li onclick="selectSuggestion('${item.replace(/'/g, "\\'")}')">${item}</li>`;
+                        });
+                        listHtml += '</ul>';
+                        textDiv.innerHTML = listHtml;
+                        textDiv.style.display = "block";
+                    } else {
+                        textDiv.style.display = "none";
+                    }
+                }
+            });
+        }
+
+        function selectSuggestion(value) {
+            document.getElementById("srch").value = value;
+            document.getElementById("text").style.display = "none";
+            document.getElementById("sub").click();
+        }
+    </script>
+
+</body>
+</html>
